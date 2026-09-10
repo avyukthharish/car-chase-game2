@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Car Chase 3D — Developed by Avyukth H</title>
+  <meta name="description" content="A fast-paced 3D car chase game built with Three.js. Developed by Avyukth H." />
+  <meta name="author" content="Avyukth H" />
+  <style>
+    /* ============ GLOBAL ============ */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+      background: #0a0a1a;
+      color: #eee;
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    /* ============ NAVBAR ============ */
+    nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 18px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(10, 10, 26, 0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 1000;
+    }
+
+    nav .logo {
+      font-size: 22px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #ffdd00;
+      text-shadow: 0 0 15px rgba(255, 221, 0, 0.4);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    nav .logo span { color: #ff3333; }
+
+    nav .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 30px;
+    }
+
+    nav ul li a {
+      font-size: 15px;
+      letter-spacing: 1px;
+      color: #ccc;
+      transition: color 0.2s;
+    }
+
+    nav ul li a:hover { color: #ffdd00; }
+
+    nav .credit-badge {
+      font-size: 12px;
+      color: #888;
+      letter-spacing: 1px;
+      border: 1px solid rgba(255, 221, 0, 0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      background: rgba(255, 221, 0, 0.05);
+    }
+
+    nav .credit-badge strong { color: #ffdd00; }
+
+    /* ============ HERO ============ */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 120px 20px 60px;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(255, 51, 51, 0.15), transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(68, 102, 255, 0.15), transparent 60%),
+        #0a0a1a;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+      -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+    }
+
+    .hero .author-tag {
+      display: inline-block;
+      padding: 8px 22px;
+      border-radius: 30px;
+      background: rgba(255, 221, 0, 0.08);
+      border: 1px solid rgba(255, 221, 0, 0.3);
+      color: #ffdd00;
+      font-size: 13px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 25px;
+      position: relative;
+      z-index: 2;
+      backdrop-filter: blur(5px);
+    }
+
+    .hero .author-tag strong {
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.5rem);
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #ff3333, #ffdd00, #ff3333);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: shine 4s linear infinite;
+      margin-bottom: 20px;
+      position: relative;
+      z-index: 2;
+    }
+
+    @keyframes shine {
+      to { background-position: 200% center; }
+    }
+
+    .hero p {
+      font-size: clamp(1rem, 1.6vw, 1.25rem);
+      color: #bbb;
+      max-width: 700px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .btn {
+      padding: 15px 40px;
+      font-size: 16px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border-radius: 50px;
+      cursor: pointer;
+      border: none;
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, #ff3333, #ff5555);
+      color: white;
+      box-shadow: 0 8px 25px rgba(255, 51, 51, 0.5);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 12px 35px rgba(255, 51, 51, 0.7);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #ffdd00;
+      border: 2px solid rgba(255, 221, 0, 0.5);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 221, 0, 0.1);
+      border-color: #ffdd00;
+      transform: translateY(-3px);
+    }
+
+    /* ============ FEATURES ============ */
+    .features {
+      padding: 100px 40px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .features h2 {
+      text-align: center;
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 60px;
+      color: #fff;
+    }
+
+    .features h2 span { color: #ff3333; }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 30px;
+    }
+
+    .feature-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 35px 25px;
+      border-radius: 16px;
+      text-align: center;
+      transition: all 0.3s;
+      backdrop-filter: blur(5px);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(255, 51, 51, 0.5);
+      background: rgba(255, 51, 51, 0.05);
+      box-shadow: 0 15px 40px rgba(255, 51, 51, 0.15);
+    }
+
+    .feature-card .icon {
+      font-size: 42px;
+      margin-bottom: 18px;
+      display: block;
+    }
+
+    .feature-card h3 {
+      font-size: 18px;
+      letter-spacing: 2px;
+      margin-bottom: 12px;
+      color: #ffdd00;
+      text-transform: uppercase;
+    }
+
+    .feature-card p {
+      color: #aaa;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* ============ GAME SECTION ============ */
+    .game-section {
+      padding: 80px 20px 100px;
+      background: linear-gradient(180deg, #0a0a1a 0%, #050510 100%);
+    }
+
+    .game-section h2 {
+      text-align: center;
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 15px;
+    }
+
+    .game-section h2 span { color: #ffdd00; }
+
+    .game-section .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 15px;
+      font-size: 15px;
+      letter-spacing: 1px;
+    }
+
+    .game-section .dev-credit {
+      text-align: center;
+      color: #ffdd00;
+      font-size: 13px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+      opacity: 0.85;
+    }
+
+    .game-section .dev-credit strong {
+      color: #fff;
+      text-shadow: 0 0 15px rgba(255, 221, 0, 0.5);
+    }
+
+    .game-wrapper {
+      max-width: 1100px;
+      margin: 0 auto;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 2px solid rgba(255, 221, 0, 0.3);
+      box-shadow:
+        0 0 40px rgba(255, 221, 0, 0.15),
+        0 0 80px rgba(255, 51, 51, 0.1);
+      position: relative;
+      background: #000;
+    }
+
+    .game-wrapper iframe {
+      display: block;
+      width: 100%;
+      height: 650px;
+      border: none;
+    }
+
+    .game-tips {
+      max-width: 1100px;
+      margin: 25px auto 0;
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .tip {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 14px 22px;
+      font-size: 14px;
+      color: #ccc;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tip .kbd {
+      background: rgba(255, 221, 0, 0.15);
+      border: 1px solid rgba(255, 221, 0, 0.4);
+      color: #ffdd00;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 13px;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    /* ============ HOW TO PLAY ============ */
+    .howto {
+      padding: 100px 40px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .howto h2 {
+      text-align: center;
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 60px;
+    }
+
+    .howto h2 span { color: #ff3333; }
+
+    .step {
+      display: flex;
+      gap: 25px;
+      align-items: flex-start;
+      margin-bottom: 35px;
+      padding: 25px;
+      background: rgba(255, 255, 255, 0.02);
+      border-left: 4px solid #ff3333;
+      border-radius: 10px;
+      transition: all 0.3s;
+    }
+
+    .step:hover {
+      background: rgba(255, 51, 51, 0.05);
+      transform: translateX(8px);
+    }
+
+    .step .num {
+      font-size: 36px;
+      font-weight: bold;
+      color: #ffdd00;
+      min-width: 50px;
+      line-height: 1;
+      text-shadow: 0 0 15px rgba(255, 221, 0, 0.4);
+    }
+
+    .step h3 {
+      font-size: 18px;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .step p {
+      color: #aaa;
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    /* ============ ABOUT DEV ============ */
+    .about-dev {
+      padding: 80px 40px 100px;
+      background: linear-gradient(180deg, #050510, #0a0a1a);
+      text-align: center;
+    }
+
+    .about-dev .card {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 50px 40px;
+      background: rgba(255, 221, 0, 0.04);
+      border: 2px solid rgba(255, 221, 0, 0.25);
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 60px rgba(255, 221, 0, 0.1);
+    }
+
+    .about-dev .avatar {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff3333, #ffdd00);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 40px;
+      margin: 0 auto 25px;
+      box-shadow: 0 0 40px rgba(255, 221, 0, 0.4);
+    }
+
+    .about-dev .label {
+      color: #888;
+      font-size: 13px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .about-dev h2 {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #ff3333, #ffdd00);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 20px;
+    }
+
+    .about-dev p {
+      color: #bbb;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* ============ FOOTER ============ */
+    footer {
+      padding: 40px 20px;
+      text-align: center;
+      color: #555;
+      font-size: 13px;
+      letter-spacing: 1px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      background: #050510;
+      line-height: 1.8;
+    }
+
+    footer .dev-line {
+      color: #ffdd00;
+      font-size: 14px;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    footer .dev-line strong { color: #fff; }
+
+    footer .heart { color: #ff3333; }
+
+    /* ============ RESPONSIVE ============ */
+    @media (max-width: 768px) {
+      nav { padding: 15px 20px; }
+      nav ul { display: none; }
+      nav .credit-badge { font-size: 10px; padding: 5px 10px; }
+      nav .logo { font-size: 18px; }
+      .game-wrapper iframe { height: 480px; }
+      .features, .howto { padding: 60px 20px; }
+      .hero { padding: 100px 20px 40px; }
+    }
+
+    @media (max-width: 480px) {
+      .game-wrapper iframe { height: 400px; }
+      .step .num { font-size: 28px; min-width: 40px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ NAVBAR ============ -->
+  <nav>
+    <div class="logo">🏎️ CAR <span>CHASE</span> 3D</div>
+    <div class="nav-right">
+      <ul>
+        <li><a href="#home">Home</a></li>
+        <li><a href="#play">Play</a></li>
+        <li><a href="#features">Features</a></li>
+        <li><a href="#howto">How to Play</a></li>
+      </ul>
+      <div class="credit-badge">BY <strong>AVYUKTH H</strong></div>
+    </div>
+  </nav>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="home">
+    <div class="author-tag">Developed by <strong>Avyukth H</strong></div>
+    <h1>3D Car Chase</h1>
+    <p>
+      Weave through traffic, dodge rival cars, and push your reflexes to the limit.
+      A fast-paced 3D driving game with progressive difficulty, dynamic sound, and a chase camera
+      — all running right in your browser.
+    </p>
+    <div class="hero-buttons">
+      <a href="#play" class="btn btn-primary">▶ Play Now</a>
+      <a href="#howto" class="btn btn-secondary">How to Play</a>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section class="features" id="features">
+    <h2>Game <span>Features</span></h2>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <span class="icon">🚗</span>
+        <h3>Smooth Lane Control</h3>
+        <p>Snappy left/right lane changes with no skidding — your car stays perfectly aligned.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🔥</span>
+        <h3>Progressive Difficulty</h3>
+        <p>The game speeds up as your score climbs. Every 150 points, the challenge increases.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🔊</span>
+        <h3>Dynamic Soundtrack</h3>
+        <p>Real-time engine sounds and a rhythmic background track that reacts to your driving.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🏆</span>
+        <h3>High Score System</h3>
+        <p>Your best score is saved locally and displayed every time you play.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">🎮</span>
+        <h3>Arrow Key Controls</h3>
+        <p>Intuitive controls: gas, brake, and lane switching with just the arrow keys.</p>
+      </div>
+      <div class="feature-card">
+        <span class="icon">⚡</span>
+        <h3>Instant Play</h3>
+        <p>No downloads, no installs. Runs directly in any modern browser with WebGL.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GAME SECTION ============ -->
+  <section class="game-section" id="play">
+    <h2>Play the <span>Game</span></h2>
+    <p class="subtitle">Click inside the game, then press any arrow key to start.</p>
+    <p class="dev-credit">Developed by <strong>Avyukth H</strong></p>
+
+    <div class="game-wrapper">
+      <iframe
+        id="gameFrame"
+        title="3D Car Chase Game — Developed by Avyukth H"
+        allow="autoplay"
+      ></iframe>
+    </div>
+
+    <div class="game-tips">
+      <div class="tip"><span class="kbd">↑</span> Accelerate</div>
+      <div class="tip"><span class="kbd">↓</span> Brake</div>
+      <div class="tip"><span class="kbd">←</span> <span class="kbd">→</span> Change Lane</div>
+      <div class="tip"><span class="kbd">R</span> Restart</div>
+    </div>
+  </section>
+
+  <!-- ============ HOW TO PLAY ============ -->
+  <section class="howto" id="howto">
+    <h2>How to <span>Play</span></h2>
+
+    <div class="step">
+      <div class="num">01</div>
+      <div>
+        <h3>Start the Engine</h3>
+        <p>Click anywhere inside the game area, then press the <strong>↑</strong> arrow key to accelerate. This also enables sound.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">02</div>
+      <div>
+        <h3>Switch Lanes</h3>
+        <p>Use <strong>←</strong> and <strong>→</strong> to move between the seven lanes. Your car shifts cleanly without skidding.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">03</div>
+      <div>
+        <h3>Brake When Needed</h3>
+        <p>Press <strong>↓</strong> to slow down and avoid collisions. Use it wisely when traffic gets tight.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">04</div>
+      <div>
+        <h3>Survive &amp; Score</h3>
+        <p>Each car you pass adds points. The longer you survive, the faster the game gets — and the higher your score climbs.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="num">05</div>
+      <div>
+        <h3>Beat Your Best</h3>
+        <p>Your highest score is saved automatically. Press <strong>R</strong> to restart and try to beat it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT THE DEVELOPER ============ -->
+  <section class="about-dev" id="about">
+    <div class="card">
+      <div class="avatar">👨‍💻</div>
+      <div class="label">About the Developer</div>
+      <h2>Avyukth H</h2>
+      <p>
+        This 3D Car Chase game was designed and developed by <strong style="color:#ffdd00;">Avyukth H</strong>.
+        Built using HTML, CSS, JavaScript, and Three.js — with a focus on clean controls,
+        progressive difficulty, and an immersive driving experience.
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer>
+    <div class="dev-line">DEVELOPED BY <strong>AVYUKTH H</strong></div>
+    Built with <span class="heart">♥</span> using HTML, CSS, JavaScript &amp; Three.js — No downloads required.
+  </footer>
+
+  <!-- ============ INJECT GAME INTO IFRAME ============ -->
+  <script>
+    const gameCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>3D Car Chase — by Avyukth H</title>
+<style>
+  body { margin: 0; overflow: hidden; background: #111; font-family: Arial, sans-serif; }
+  #info { position: absolute; top: 20px; left: 20px; color: white; background: rgba(0,0,0,0.6); padding: 10px 20px; border-radius: 30px; pointer-events: none; z-index: 100; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); font-weight: bold; letter-spacing: 1px; font-size: 14px; }
+  #dev-tag { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: #ffdd00; background: rgba(0,0,0,0.5); padding: 6px 16px; border-radius: 20px; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; z-index: 100; backdrop-filter: blur(5px); border: 1px solid rgba(255,221,0,0.3); }
+  #dev-tag strong { color: #fff; }
+  #score-board { position: absolute; top: 20px; right: 20px; color: #ffdd00; font-size: 18px; font-weight: bold; text-shadow: 0 0 10px rgba(0,0,0,0.8); background: rgba(0,0,0,0.6); padding: 10px 22px; border-radius: 30px; backdrop-filter: blur(5px); border: 1px solid rgba(255,215,0,0.5); z-index: 100; text-align: right; line-height: 1.5; }
+  #score-board .label { color: #aaa; font-size: 12px; font-weight: normal; letter-spacing: 1px; }
+  #score-board .value { color: #ffdd00; font-size: 20px; }
+  #score-board .highscore { color: #ffaa00; font-size: 16px; }
+  #difficulty-indicator { position: absolute; top: 100px; right: 20px; color: #ff6666; font-size: 13px; font-weight: bold; letter-spacing: 2px; background: rgba(0,0,0,0.5); padding: 8px 18px; border-radius: 20px; backdrop-filter: blur(5px); border: 1px solid rgba(255,100,100,0.4); z-index: 100; display: none; }
+  #controls { position: absolute; bottom: 25px; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.7); padding: 10px 25px; border-radius: 40px; font-size: 14px; letter-spacing: 1px; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.2); z-index: 100; display: flex; gap: 30px; white-space: nowrap; }
+  .key { background: rgba(255,255,255,0.2); padding: 3px 12px; border-radius: 8px; font-weight: bold; color: #fff; margin: 0 3px; border: 1px solid rgba(255,255,255,0.3); font-size: 16px; }
+  #mute-btn { position: absolute; bottom: 25px; right: 25px; background: rgba(0,0,0,0.7); color: white; border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; width: 45px; height: 45px; font-size: 22px; cursor: pointer; z-index: 100; backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; }
+  #gameover { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; background: rgba(0,0,0,0.92); padding: 35px 55px; border-radius: 20px; text-align: center; z-index: 200; backdrop-filter: blur(10px); border: 2px solid #ff3333; box-shadow: 0 0 60px rgba(255,0,0,0.6); display: none; min-width: 300px; }
+  #gameover h1 { color: #ff3333; font-size: 42px; margin: 0 0 18px; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 0 20px rgba(255,0,0,0.5); }
+  #gameover .score-line { font-size: 20px; margin: 8px 0; color: #ccc; }
+  #gameover .score-line span { color: #ffdd00; font-weight: bold; font-size: 26px; }
+  #gameover .highscore-line { font-size: 16px; margin: 8px 0 18px; color: #ffaa00; }
+  #gameover .dev-credit { font-size: 11px; color: #888; letter-spacing: 2px; margin-top: 15px; text-transform: uppercase; }
+  #gameover .dev-credit strong { color: #ffdd00; }
+  #gameover button { background: #ff3333; color: white; border: none; padding: 13px 36px; font-size: 18px; border-radius: 50px; cursor: pointer; font-weight: bold; letter-spacing: 2px; transition: 0.2s; box-shadow: 0 5px 15px rgba(255,51,51,0.4); border: 1px solid rgba(255,255,255,0.3); margin-top: 8px; }
+  #gameover button:hover { background: #ff5555; transform: scale(1.05); }
+  .new-record { color: #ffdd00; font-size: 14px; font-weight: bold; letter-spacing: 3px; animation: pulse 0.8s infinite alternate; }
+  @keyframes pulse { from { opacity: 0.6; } to { opacity: 1; text-shadow: 0 0 15px #ffdd00; } }
+</style>
+</head>
+<body>
+<div id="info">🚗 3D CAR CHASE</div>
+<div id="dev-tag">BY <strong>AVYUKTH H</strong></div>
+<div id="score-board">
+  <div><span class="label">SCORE</span> <span class="value" id="scoreValue">0</span></div>
+  <div class="highscore">BEST <span id="highScoreValue">0</span></div>
+</div>
+<div id="difficulty-indicator">🔥 SPEED INCREASED</div>
+<div id="controls">
+  <span><span class="key">↑</span> Gas <span class="key">↓</span> Brake <span class="key">←</span> <span class="key">→</span> Lane</span>
+  <span><span class="key">R</span> Restart</span>
+</div>
+<button id="mute-btn" title="Toggle Sound">🔊</button>
+<div id="gameover">
+  <h1>CRASHED!</h1>
+  <div class="score-line">Score: <span id="finalScore">0</span></div>
+  <div class="highscore-line" id="highScoreLine">Best: <span id="finalHighScore">0</span></div>
+  <div id="newRecord" class="new-record" style="display:none;">★ NEW RECORD ★</div>
+  <button id="restartBtn">PLAY AGAIN</button>
+  <div class="dev-credit">Developed by <strong>Avyukth H</strong></div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+  }
+}
+<\/script>
+
+<script type="module">
+import * as THREE from 'three';
+
+let scene, camera, renderer;
+let playerCar, enemyCars = [];
+let roadStripes = [];
+let score = 0;
+let highScore = 0;
+let gameOver = false;
+let playerPosition = new THREE.Vector3(0, 0, 0);
+let lastTime = 0;
+let enemySpawnTimer = 0;
+let gameSpeed = 1.0;
+let laneIndex = 0;
+let playerX = 0;
+
+let difficultyLevel = 1;
+let baseSpeed = 0.16;
+let enemyBaseSpeed = 0.65;
+let spawnRate = 1.4;
+let maxEnemies = 9;
+let difficultyFlashTimer = 0;
+
+let audioCtx = null;
+let audioInitialized = false;
+let muted = false;
+let engineOsc = null;
+let engineGain = null;
+let engineFilter = null;
+let musicIntervals = [];
+let musicPlaying = false;
+let noiseBuffer = null;
+let windSource = null;
+let windGain = null;
+
+const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false, r: false };
+const lanePositions = [-4.5, -3.0, -1.5, 0, 1.5, 3.0, 4.5];
+
+function init() {
+  loadHighScore();
+  initAudio();
+
+  scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0a0a1a);
+  scene.fog = new THREE.Fog(0x0a0a1a, 20, 85);
+
+  camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+  camera.position.set(0, 6, 14);
+  camera.lookAt(0, 0, 0);
+
+  renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  document.body.appendChild(renderer.domElement);
+
+  const ambientLight = new THREE.AmbientLight(0x404060);
+  scene.add(ambientLight);
+
+  const dirLight = new THREE.DirectionalLight(0xffeedd, 1.2);
+  dirLight.position.set(10, 25, 5);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.width = 1024;
+  dirLight.shadow.mapSize.height = 1024;
+  const d = 35;
+  dirLight.shadow.camera.left = -d; dirLight.shadow.camera.right = d;
+  dirLight.shadow.camera.top = d; dirLight.shadow.camera.bottom = -d;
+  dirLight.shadow.camera.near = 1; dirLight.shadow.camera.far = 60;
+  scene.add(dirLight);
+
+  const fillLight = new THREE.PointLight(0x4466ff, 0.4);
+  fillLight.position.set(0, 8, 12);
+  scene.add(fillLight);
+
+  const backLight = new THREE.PointLight(0xffaa44, 0.3);
+  backLight.position.set(0, 6, -18);
+  scene.add(backLight);
+
+  createStars();
+  createRoad();
+  createPlayerCar();
+  for (let i = 0; i < 3; i++) spawnEnemyCar();
+
+  window.addEventListener('keydown', (e) => {
+    const key = e.key;
+    if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
+      e.preventDefault();
+      ensureAudioStarted();
+      if (key === 'ArrowUp') keys.ArrowUp = true;
+      if (key === 'ArrowDown') keys.ArrowDown = true;
+      if (key === 'ArrowLeft' && !keys.ArrowLeft) { if (laneIndex > -3) laneIndex--; }
+      if (key === 'ArrowRight' && !keys.ArrowRight) { if (laneIndex < 3) laneIndex++; }
+      if (key === 'ArrowLeft') keys.ArrowLeft = true;
+      if (key === 'ArrowRight') keys.ArrowRight = true;
+    }
+    if (key.toLowerCase() === 'r') { e.preventDefault(); ensureAudioStarted(); restartGame(); }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    const key = e.key;
+    if (key === 'ArrowUp' || key === 'ArrowDown' || key === 'ArrowLeft' || key === 'ArrowRight') {
+      e.preventDefault();
+      if (key === 'ArrowUp') keys.ArrowUp = false;
+      if (key === 'ArrowDown') keys.ArrowDown = false;
+      if (key === 'ArrowLeft') keys.ArrowLeft = false;
+      if (key === 'ArrowRight') keys.ArrowRight = false;
+    }
+  });
+
+  window.addEventListener('resize', onWindowResize);
+  document.getElementById('restartBtn').addEventListener('click', () => { ensureAudioStarted(); restartGame(); });
+  document.getElementById('mute-btn').addEventListener('click', toggleMute);
+
+  lastTime = performance.now();
+  animate();
+}
+
+function initAudio() {
+  try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+  catch (e) { audioCtx = null; }
+}
+
+function ensureAudioStarted() {
+  if (!audioCtx || audioInitialized) return;
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  createAudioGraph();
+  audioInitialized = true;
+}
+
+function createAudioGraph() {
+  const masterGain = audioCtx.createGain();
+  masterGain.gain.value = muted ? 0 : 0.7;
+  masterGain.connect(audioCtx.destination);
+  window._masterGain = masterGain;
+
+  engineOsc = audioCtx.createOscillator();
+  engineOsc.type = 'sawtooth';
+  engineOsc.frequency.value = 45;
+
+  const engineOsc2 = audioCtx.createOscillator();
+  engineOsc2.type = 'square';
+  engineOsc2.frequency.value = 90;
+
+  engineFilter = audioCtx.createBiquadFilter();
+  engineFilter.type = 'lowpass';
+  engineFilter.frequency.value = 180;
+  engineFilter.Q.value = 3;
+
+  engineGain = audioCtx.createGain();
+  engineGain.gain.value = 0.08;
+
+  engineOsc.connect(engineFilter);
+  engineOsc2.connect(engineFilter);
+  engineFilter.connect(engineGain);
+  engineGain.connect(masterGain);
+  engineOsc.start();
+  engineOsc2.start();
+
+  const bufferSize = audioCtx.sampleRate * 2;
+  noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+  const data = noiseBuffer.getChannelData(0);
+  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+  windSource = audioCtx.createBufferSource();
+  windSource.buffer = noiseBuffer;
+  windSource.loop = true;
+
+  const windFilter = audioCtx.createBiquadFilter();
+  windFilter.type = 'bandpass';
+  windFilter.frequency.value = 800;
+  windFilter.Q.value = 1.2;
+
+  windGain = audioCtx.createGain();
+  windGain.gain.value = 0.02;
+
+  windSource.connect(windFilter);
+  windFilter.connect(windGain);
+  windGain.connect(masterGain);
+  windSource.start();
+
+  startMusicInternal();
+}
+
+function startMusicInternal() {
+  if (musicPlaying) return;
+  musicPlaying = true;
+  const beatInterval = 500;
+
+  const bassPulseInterval = setInterval(() => {
+    if (!audioCtx || muted || gameOver) return;
+    playBassDrum();
+  }, beatInterval);
+
+  const hatInterval = setInterval(() => {
+    if (!audioCtx || muted || gameOver) return;
+    playHiHat();
+  }, beatInterval / 2);
+
+  const arpInterval = setInterval(() => {
+    if (!audioCtx || muted || gameOver) return;
+    playArp();
+  }, beatInterval * 2);
+
+  musicIntervals.push(bassPulseInterval, hatInterval, arpInterval);
+}
+
+function playBassDrum() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.frequency.setValueAtTime(120, t);
+  osc.frequency.exponentialRampToValueAtTime(40, t + 0.15);
+  gain.gain.setValueAtTime(0.4, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+  osc.connect(gain); gain.connect(window._masterGain);
+  osc.start(t); osc.stop(t + 0.3);
+}
+
+function playHiHat() {
+  if (!audioCtx || !noiseBuffer) return;
+  const t = audioCtx.currentTime;
+  const src = audioCtx.createBufferSource();
+  src.buffer = noiseBuffer;
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.value = 7000;
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.06, t);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+  src.connect(filter); filter.connect(gain); gain.connect(window._masterGain);
+  src.start(t); src.stop(t + 0.06);
+}
+
+function playArp() {
+  if (!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const notes = [220, 277.18, 329.63, 440];
+  const note = notes[Math.floor(Math.random() * notes.length)];
+  const osc = audioCtx.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.value = note;
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.0, t);
+  gain.gain.linearRampToValueAtTime(0.05, t + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+  osc.connect(gain); gain.connect(window._masterGain);
+  osc.start(t); osc.stop(t + 0.45);
+}
+
+function updateEngineSound() {
+  if (!engineOsc || !audioCtx || !audioInitialized) return;
+  if (muted) {
+    if (engineGain) engineGain.gain.value = 0;
+    if (windGain) windGain.gain.value = 0;
+    return;
+  }
+  const targetFreq = 45 + (gameSpeed - 1.0) * 30 + difficultyLevel * 5;
+  engineOsc.frequency.linearRampToValueAtTime(targetFreq, audioCtx.currentTime + 0.1);
+  let targetGain = 0.06;
+  if (keys.ArrowUp) targetGain = 0.14;
+  if (keys.ArrowDown) targetGain = 0.04;
+  engineGain.gain.linearRampToValueAtTime(targetGain, audioCtx.currentTime + 0.1);
+  if (windGain) {
+    const windVol = 0.015 + (gameSpeed - 1.0) * 0.02 + difficultyLevel * 0.003;
+    windGain.gain.linearRampToValueAtTime(Math.min(0.08, windVol), audioCtx.currentTime + 0.1);
+  }
+}
+
+function toggleMute() {
+  muted = !muted;
+  document.getElementById('mute-btn').textContent = muted ? '🔇' : '🔊';
+  if (window._masterGain && audioCtx) {
+    window._masterGain.gain.linearRampToValueAtTime(muted ? 0 : 0.7, audioCtx.currentTime + 0.1);
+  }
+}
+
+function loadHighScore() {
+  try { const saved = localStorage.getItem('carChaseHighScore'); if (saved) highScore = parseInt(saved, 10) || 0; }
+  catch (e) { highScore = 0; }
+  updateHighScoreDisplay();
+}
+
+function saveHighScore() {
+  try { localStorage.setItem('carChaseHighScore', highScore.toString()); } catch (e) {}
+  updateHighScoreDisplay();
+}
+
+function updateHighScoreDisplay() {
+  document.getElementById('highScoreValue').textContent = highScore;
+}
+
+function updateDifficulty() {
+  const newLevel = Math.floor(score / 150) + 1;
+  if (newLevel > difficultyLevel) {
+    difficultyLevel = newLevel;
+    baseSpeed = 0.16 + (difficultyLevel - 1) * 0.025;
+    enemyBaseSpeed = 0.65 + (difficultyLevel - 1) * 0.08;
+    spawnRate = Math.max(0.5, 1.4 - (difficultyLevel - 1) * 0.12);
+    maxEnemies = Math.min(16, 9 + (difficultyLevel - 1) * 1);
+    difficultyFlashTimer = 2.0;
+    document.getElementById('difficulty-indicator').style.display = 'block';
+    const ind = document.getElementById('difficulty-indicator');
+    if (difficultyLevel >= 5) ind.textContent = '🔥 EXTREME SPEED';
+    else if (difficultyLevel >= 3) ind.textContent = '⚡ HIGH SPEED';
+    else ind.textContent = '🔥 SPEED INCREASED';
+  }
+  if (difficultyFlashTimer > 0) {
+    difficultyFlashTimer -= 0.016;
+    if (difficultyFlashTimer <= 0) document.getElementById('difficulty-indicator').style.display = 'none';
+  }
+}
+
+function createStars() {
+  const g = new THREE.BufferGeometry();
+  const c = 1200;
+  const p = new Float32Array(c * 3);
+  for (let i = 0; i < c * 3; i += 3) {
+    p[i] = (Math.random() - 0.5) * 220;
+    p[i+1] = (Math.random() - 0.5) * 100 + 35;
+    p[i+2] = (Math.random() - 0.5) * 220 - 60;
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(p, 3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xffffff, size: 0.18, transparent: true })));
+}
+
+function createRoad() {
+  const roadGeo = new THREE.PlaneGeometry(12, 220);
+  const roadMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.85, metalness: 0.1 });
+  const roadMesh = new THREE.Mesh(roadGeo, roadMat);
+  roadMesh.rotation.x = -Math.PI / 2;
+  roadMesh.position.y = -0.01;
+  roadMesh.position.z = -80;
+  roadMesh.receiveShadow = true;
+  scene.add(roadMesh);
+
+  const edgeMat = new THREE.MeshStandardMaterial({ color: 0x888888, emissive: 0x224466, emissiveIntensity: 0.6 });
+  const leftEdge = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 220), edgeMat);
+  leftEdge.position.set(-6.25, 0.12, -80);
+  leftEdge.receiveShadow = true; leftEdge.castShadow = true;
+  scene.add(leftEdge);
+  const rightEdge = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.25, 220), edgeMat);
+  rightEdge.position.set(6.25, 0.12, -80);
+  rightEdge.receiveShadow = true; rightEdge.castShadow = true;
+  scene.add(rightEdge);
+
+  const stripeMat = new THREE.MeshStandardMaterial({ color: 0xffdd00, emissive: 0xffaa00, emissiveIntensity: 0.4 });
+  for (let z = 15; z > -170; z -= 6) {
+    const s = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.06, 2.5), stripeMat);
+    s.position.set(0, 0.06, z);
+    s.receiveShadow = true;
+    scene.add(s);
+    roadStripes.push(s);
+  }
+
+  const sideMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x4488ff, emissiveIntensity: 0.25 });
+  for (let z = 15; z > -170; z -= 8) {
+    const sL = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.06, 3), sideMat);
+    sL.position.set(-5.8, 0.06, z); sL.receiveShadow = true; scene.add(sL);
+    const sR = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.06, 3), sideMat);
+    sR.position.set(5.8, 0.06, z); sR.receiveShadow = true; scene.add(sR);
+  }
+}
+
+function createPlayerCar() {
+  const car = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff3333, emissive: 0x441111, emissiveIntensity: 0.3, roughness: 0.4, metalness: 0.6 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.6, 4), bodyMat);
+  body.castShadow = true; body.receiveShadow = true; body.position.y = 0.3;
+  car.add(body);
+
+  const cabinMat = new THREE.MeshStandardMaterial({ color: 0x222222, emissive: 0x111122, emissiveIntensity: 0.2, roughness: 0.3, metalness: 0.8 });
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.5, 2), cabinMat);
+  cabin.castShadow = true; cabin.receiveShadow = true; cabin.position.set(0, 0.8, -0.2);
+  car.add(cabin);
+
+  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+  [[-0.9, 0.2, 1.2], [0.9, 0.2, 1.2], [-0.9, 0.2, -1.2], [0.9, 0.2, -1.2]].forEach(p => {
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16), wheelMat);
+    w.rotation.z = Math.PI / 2;
+    w.position.set(p[0], p[1], p[2]);
+    w.castShadow = true; w.receiveShadow = true;
+    car.add(w);
+  });
+
+  const lightMat = new THREE.MeshStandardMaterial({ color: 0xffffaa, emissive: 0xffaa00, emissiveIntensity: 1.5 });
+  const hlL = new THREE.Mesh(new THREE.SphereGeometry(0.15), lightMat);
+  hlL.position.set(-0.6, 0.4, 2.1); car.add(hlL);
+  const hlR = new THREE.Mesh(new THREE.SphereGeometry(0.15), lightMat);
+  hlR.position.set(0.6, 0.4, 2.1); car.add(hlR);
+
+  const tailMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 0.8 });
+  const tlL = new THREE.Mesh(new THREE.SphereGeometry(0.12), tailMat);
+  tlL.position.set(-0.6, 0.4, -2.1); car.add(tlL);
+  const tlR = new THREE.Mesh(new THREE.SphereGeometry(0.12), tailMat);
+  tlR.position.set(0.6, 0.4, -2.1); car.add(tlR);
+
+  playerCar = car;
+  playerCar.position.set(0, 0, 0);
+  scene.add(playerCar);
+}
+
+function createEnemyCar() {
+  const car = new THREE.Group();
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0x3333ff, emissive: 0x111144, emissiveIntensity: 0.3, roughness: 0.4, metalness: 0.6 });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.6, 4), bodyMat);
+  body.castShadow = true; body.receiveShadow = true; body.position.y = 0.3;
+  car.add(body);
+
+  const cabinMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3, metalness: 0.8 });
+  const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.5, 2), cabinMat);
+  cabin.castShadow = true; cabin.receiveShadow = true; cabin.position.set(0, 0.8, -0.2);
+  car.add(cabin);
+
+  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
+  [[-0.9, 0.2, 1.2], [0.9, 0.2, 1.2], [-0.9, 0.2, -1.2], [0.9, 0.2, -1.2]].forEach(p => {
+    const w = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16), wheelMat);
+    w.rotation.z = Math.PI / 2;
+    w.position.set(p[0], p[1], p[2]);
+    w.castShadow = true; w.receiveShadow = true;
+    car.add(w);
+  });
+
+  const lightMat = new THREE.MeshStandardMaterial({ color: 0xffffaa, emissive: 0xffaa00, emissiveIntensity: 1.5 });
+  const hlL = new THREE.Mesh(new THREE.SphereGeometry(0.15), lightMat);
+  hlL.position.set(-0.6, 0.4, 2.1); car.add(hlL);
+  const hlR = new THREE.Mesh(new THREE.SphereGeometry(0.15), lightMat);
+  hlR.position.set(0.6, 0.4, 2.1); car.add(hlR);
+
+  const tailMat = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0xff0000, emissiveIntensity: 0.8 });
+  const tlL = new THREE.Mesh(new THREE.SphereGeometry(0.12), tailMat);
+  tlL.position.set(-0.6, 0.4, -2.1); car.add(tlL);
+  const tlR = new THREE.Mesh(new THREE.SphereGeometry(0.12), tailMat);
+  tlR.position.set(0.6, 0.4, -2.1); car.add(tlR);
+
+  return car;
+}
+
+function spawnEnemyCar() {
+  if (gameOver) return;
+  const enemy = createEnemyCar();
+  let enemyLane;
+  const playerLane = laneIndex;
+  let attempts = 0;
+  do { enemyLane = Math.floor(Math.random() * 7) - 3; attempts++; }
+  while (Math.abs(enemyLane - playerLane) < 1 && attempts < 10);
+  const xPos = lanePositions[enemyLane + 3];
+  enemy.position.set(xPos, 0, -65 - Math.random() * 35);
+  const hue = Math.random() * 0.2 + 0.5;
+  enemy.children[0].material.color.setHSL(hue, 0.8, 0.5);
+  scene.add(enemy);
+  enemyCars.push(enemy);
+}
+
+function restartGame() {
+  enemyCars.forEach(car => scene.remove(car));
+  enemyCars = [];
+  playerCar.position.set(0, 0, 0);
+  playerCar.rotation.y = 0; playerCar.rotation.z = 0;
+  playerPosition.set(0, 0, 0);
+  playerX = 0; laneIndex = 0;
+  score = 0;
+  document.getElementById('scoreValue').textContent = '0';
+  gameOver = false;
+  document.getElementById('gameover').style.display = 'none';
+  gameSpeed = 1.0;
+  difficultyLevel = 1;
+  baseSpeed = 0.16; enemyBaseSpeed = 0.65;
+  spawnRate = 1.4; maxEnemies = 9;
+  difficultyFlashTimer = 0;
+  document.getElementById('difficulty-indicator').style.display = 'none';
+  for (let i = 0; i < 3; i++) spawnEnemyCar();
+  enemySpawnTimer = 0;
+}
+
+function onWindowResize() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+
+function checkCollision(c1, c2) {
+  const b1 = new THREE.Box3().setFromObject(c1);
+  const b2 = new THREE.Box3().setFromObject(c2);
+  const sx = 0.1, sz = 0.1;
+  b1.min.x += sx; b1.max.x -= sx; b1.min.z += sz; b1.max.z -= sz;
+  b2.min.x += sx; b2.max.x -= sx; b2.min.z += sz; b2.max.z -= sz;
+  return b1.intersectsBox(b2);
+}
+
+function updateGame(dt) {
+  if (gameOver) return;
+  updateDifficulty();
+
+  const moveSpeed = baseSpeed * gameSpeed;
+  if (keys.ArrowUp) playerPosition.z -= moveSpeed;
+  if (keys.ArrowDown) playerPosition.z += moveSpeed * 0.6;
+
+  const targetX = lanePositions[laneIndex + 3];
+  playerX += (targetX - playerX) * 0.15;
+  if (Math.abs(targetX - playerX) < 0.01) playerX = targetX;
+  playerPosition.x = playerX;
+
+  playerCar.rotation.y = 0; playerCar.rotation.z = 0; playerCar.rotation.x = 0;
+  playerCar.position.copy(playerPosition);
+  playerCar.position.y = 0;
+
+  const camOff = new THREE.Vector3(0, 3.8, 8.5);
+  const camTarget = playerPosition.clone().add(camOff);
+  camera.position.lerp(camTarget, 0.06);
+  camera.lookAt(playerPosition.x, 1.2, playerPosition.z - 2.5);
+
+  const scrollSpeed = (0.9 + (difficultyLevel - 1) * 0.15) * gameSpeed;
+  roadStripes.forEach(s => {
+    s.position.z += scrollSpeed;
+    if (s.position.z > 20) s.position.z -= 190;
+  });
+
+  for (let i = enemyCars.length - 1; i >= 0; i--) {
+    const e = enemyCars[i];
+    e.position.z += (enemyBaseSpeed + gameSpeed * 0.25);
+    if (!gameOver && checkCollision(playerCar, e)) {
+      gameOver = true;
+      const finalScore = Math.floor(score);
+      const isNew = finalScore > highScore;
+      if (isNew) { highScore = finalScore; saveHighScore(); }
+      document.getElementById('finalScore').textContent = finalScore;
+      document.getElementById('finalHighScore').textContent = highScore;
+      document.getElementById('newRecord').style.display = isNew ? 'block' : 'none';
+      document.getElementById('gameover').style.display = 'block';
+      return;
+    }
+    if (e.position.z > 18) {
+      scene.remove(e);
+      enemyCars.splice(i, 1);
+      score += 10;
+      document.getElementById('scoreValue').textContent = Math.floor(score);
+    }
+  }
+
+  enemySpawnTimer += dt;
+  if (enemySpawnTimer > spawnRate && enemyCars.length < maxEnemies) {
+    spawnEnemyCar();
+    enemySpawnTimer = 0;
+  }
+
+  score += 0.08;
+  document.getElementById('scoreValue').textContent = Math.floor(score);
+  updateEngineSound();
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  const now = performance.now();
+  const dt = Math.min(0.05, (now - lastTime) / 1000);
+  lastTime = now;
+  updateGame(dt);
+  renderer.render(scene, camera);
+}
+
+init();
+<\/script>
+</body>
+</html>`;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const iframe = document.getElementById('gameFrame');
+      if (iframe) iframe.srcdoc = gameCode;
+    });
+  </script>
+</body>
+</html>
